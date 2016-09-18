@@ -78,7 +78,7 @@ Here's this module being exercised from an iex session:
     iex(3)> G.word_length(game)
     6
 
-    iex(4)> G.word_as_string_string(game)
+    iex(4)> G.word_as_string_string(game)|
     "_ _ _ _ _ _"
 
     iex(5)> { game, state, guess } = G.make_move(game, "e")
@@ -122,7 +122,7 @@ Here's this module being exercised from an iex session:
     iex(18)> { game, state, guess } = G.make_move(game, "z")
     . . .
 
-    iex(19)> state
+    iex(19)> state|>IO.inspect
     :won
 
     iex(20)> G.word_as_string(game)
@@ -141,7 +141,11 @@ Here's this module being exercised from an iex session:
   """
 
   @spec new_game :: state
+  defmodule State do
+    defstruct turns_left: 10, word: Hangman.Dictionary.random_word() , usedLetters: []
+  end
   def new_game do
+    state=%State{}
   end
 
 
@@ -152,6 +156,7 @@ Here's this module being exercised from an iex session:
   """
   @spec new_game(binary) :: state
   def new_game(word) do
+    state=%State{word: word}
   end
 
 
@@ -177,6 +182,18 @@ Here's this module being exercised from an iex session:
 
   @spec make_move(state, ch) :: { state, atom, optional_ch }
   def make_move(state, guess) do
+    cond do
+          String.contains?(state.word, guess)->
+          newState=%State{state| usedLetters: [guess|state.usedLetters]}
+          cond do
+          String.contains?(word_as_string(newState), "_")->{newState,:good_guess, guess}
+          true->{newState, :won, guess}
+        end
+        true->cond do
+          state.turns_left-1==0->{%State{state| turns_left: 0 , usedLetters: [guess|state.usedLetters]},:lost, guess}
+          true->{%State{state| turns_left: state.turns_left-1 , usedLetters: [guess|state.usedLetters]},:bad_guess, guess}
+        end
+    end
   end
 
 
@@ -187,6 +204,7 @@ Here's this module being exercised from an iex session:
   """
   @spec word_length(state) :: integer
   def word_length(%{ word: word }) do
+    String.length(word)
   end
 
   @doc """
@@ -199,6 +217,7 @@ Here's this module being exercised from an iex session:
 
   @spec letters_used_so_far(state) :: [ binary ]
   def letters_used_so_far(state) do
+    state.usedLetters
   end
 
   @doc """
@@ -211,6 +230,7 @@ Here's this module being exercised from an iex session:
 
   @spec turns_left(state) :: integer
   def turns_left(state) do
+    state.turns_left
   end
 
   @doc """
@@ -224,6 +244,10 @@ Here's this module being exercised from an iex session:
 
   @spec word_as_string(state, boolean) :: binary
   def word_as_string(state, reveal \\ false) do
+    cond do
+      reveal->String.codepoints(state.word)|>Enum.join(" ")|>to_string()
+      true->String.codepoints(state.word)|>str_replace(state)|>Enum.join(" ")|>to_string()
+    end
   end
 
   ###########################
@@ -231,5 +255,14 @@ Here's this module being exercised from an iex session:
   ###########################
 
   # Your private functions go here
-
+  def str_replace([a|rest], state) do
+    cond do
+      Enum.member?(state.usedLetters, a)->[a| str_replace(rest,state)]
+      true->["_"| str_replace(rest,state)]
+    end
+  end
+  def str_replace([], state) do
+    []
+  end
+  
  end
