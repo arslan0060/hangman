@@ -187,10 +187,10 @@ Here's this module being exercised from an iex session:
           newState=%State{state| usedLetters: [guess|state.usedLetters]}
           cond do
           String.contains?(word_as_string(newState), "_")->{newState,:good_guess, guess}
-          true->{newState, :won, guess}
+          true->{newState, :won, nil}
         end
         true->cond do
-          state.turns_left-1==0->{%State{state| turns_left: 0 , usedLetters: [guess|state.usedLetters]},:lost, guess}
+          state.turns_left-1==0->{%State{state| turns_left: 0 , usedLetters: [guess|state.usedLetters]},:lost, nil}
           true->{%State{state| turns_left: state.turns_left-1 , usedLetters: [guess|state.usedLetters]},:bad_guess, guess}
         end
     end
