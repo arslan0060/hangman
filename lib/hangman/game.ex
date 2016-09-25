@@ -250,29 +250,29 @@ Here's this module being exercised from an iex session:
   ###########################
 
   # Your private functions go here
-  def str_replace([a|rest], state) do
+  defp str_replace([a|rest], state) do
     cond do
       state.correct[a]->[a| str_replace(rest,state)]
       true->["_"| str_replace(rest,state)]
     end
   end
 
-  def str_replace([], _state) do
+  defp str_replace([], _state) do
     []
   end
 
-  def game_correct_status(state, guess) do
+  defp game_correct_status(state, guess) do
     cond do
       String.contains?(word_as_string(state), "_")->{state, :good_guess, guess}
       true->{state,:won,:nil}
     end
   end
 
-  def game_wrong_status(%State{turns_left: 0, word: w1, used_letters: used, correct: c}, _guess) do
+  defp game_wrong_status(%State{turns_left: 0, word: w1, used_letters: used, correct: c}, _guess) do
     {%{turns_left: 0, word: w1, used_letters: used, correct: c}, :lost, nil}
   end
   
-  def game_wrong_status(state, guess) do
+  defp game_wrong_status(state, guess) do
     {state, :bad_guess, guess}
   end
   
