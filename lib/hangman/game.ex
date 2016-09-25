@@ -129,11 +129,11 @@ Here's this module being exercised from an iex session:
     "f r e e z e"
 
 
-  """
+    """
 
-  @type state :: map
-  @type ch    :: binary
-  @type optional_ch :: ch | nil
+    @type state :: map
+    @type ch    :: binary
+    @type optional_ch :: ch | nil
 
   @doc """
   Run a game of Hangman with our user. Use the dictionary to
@@ -142,10 +142,10 @@ Here's this module being exercised from an iex session:
 
   @spec new_game :: state
   defmodule State do
-    defstruct turns_left: 10, word: Hangman.Dictionary.random_word() , usedLetters: []
+    defstruct turns_left: 10, word: Hangman.Dictionary.random_word(), used_letters: [], correct: %{}
   end
   def new_game do
-    state=%State{}
+    %State{}
   end
 
 
@@ -156,7 +156,7 @@ Here's this module being exercised from an iex session:
   """
   @spec new_game(binary) :: state
   def new_game(word) do
-    state=%State{word: word}
+    %State{word: word}
   end
 
 
@@ -178,24 +178,19 @@ Here's this module being exercised from an iex session:
 
   * `:bad_guess` — the word does not contain the guess. The number
      of turns left has been reduced by 1
-  """
+     """
 
-  @spec make_move(state, ch) :: { state, atom, optional_ch }
+  @spec make_move(state, ch) :: { state, atom, optional_ch }   
   def make_move(state, guess) do
-    cond do
-          String.contains?(state.word, guess)->
-          newState=%State{state| usedLetters: [guess|state.usedLetters]}
-          cond do
-          String.contains?(word_as_string(newState), "_")->{newState,:good_guess, guess}
-          true->{newState, :won, nil}
-        end
-        true->cond do
-          state.turns_left-1==0->{%State{state| turns_left: 0 , usedLetters: [guess|state.usedLetters]},:lost, nil}
-          true->{%State{state| turns_left: state.turns_left-1 , usedLetters: [guess|state.usedLetters]},:bad_guess, guess}
-        end
+    cond do 
+      String.contains?(state.word, guess)->
+        new_state=%State{state| used_letters: [guess|state.used_letters], correct: Map.put(state.correct, guess, true)}
+        game_correct_status(new_state, guess)
+      true->
+        new_state=%State{state| turns_left: state.turns_left-1, used_letters: [guess| state.used_letters]}
+        game_wrong_status(new_state, guess)
     end
   end
-
 
   @doc """
   `len = Hangman.Game.word_length(game)`
@@ -217,7 +212,7 @@ Here's this module being exercised from an iex session:
 
   @spec letters_used_so_far(state) :: [ binary ]
   def letters_used_so_far(state) do
-    state.usedLetters
+    state.used_letters
   end
 
   @doc """
@@ -257,12 +252,28 @@ Here's this module being exercised from an iex session:
   # Your private functions go here
   def str_replace([a|rest], state) do
     cond do
-      Enum.member?(state.usedLetters, a)->[a| str_replace(rest,state)]
+      state.correct[a]->[a| str_replace(rest,state)]
       true->["_"| str_replace(rest,state)]
     end
   end
-  def str_replace([], state) do
+
+  def str_replace([], _state) do
     []
   end
+
+  def game_correct_status(state, guess) do
+    cond do
+      String.contains?(word_as_string(state), "_")->{state, :good_guess, guess}
+      true->{state,:won,:nil}
+    end
+  end
+
+  def game_wrong_status(%State{turns_left: 0, word: w1, used_letters: used, correct: c}, _guess) do
+    {%{turns_left: 0, word: w1, used_letters: used, correct: c}, :lost, nil}
+  end
   
- end
+  def game_wrong_status(state, guess) do
+    {state, :bad_guess, guess}
+  end
+  
+end
