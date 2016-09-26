@@ -242,9 +242,9 @@ Here's this module being exercised from an iex session:
   defp w_as_s(word, _correct, true ),     do: word |>Enum.join(" ")|>to_string()
 
   defp str_replace([_a, b |rest], correct, nil),   do: ["_"| str_replace([b|rest],correct, correct[b])]
-  defp str_replace([a, b |rest], correct, true),  do: [a| str_replace([b|rest],correct, correct[b])]
+  defp str_replace([a, b |rest], correct, true),   do: [a| str_replace([b|rest],correct, correct[b])]
   defp str_replace([_a], _, nil),                  do: ["_"]
-  defp str_replace([a], _, true),                 do: [a]
+  defp str_replace([a], _, true),                  do: [a]
 
 
   defp game_correct_status(state, guess) do
