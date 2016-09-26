@@ -144,9 +144,9 @@ Here's this module being exercised from an iex session:
   defmodule State do
     defstruct turns_left: 10, word: Hangman.Dictionary.random_word(), used_letters: [], correct: %{}
   end
-  def new_game do
-    %State{}
-  end
+
+  def new_game, do: %State{}
+
 
 
   @doc """
@@ -155,9 +155,7 @@ Here's this module being exercised from an iex session:
   used for testing
   """
   @spec new_game(binary) :: state
-  def new_game(word) do
-    %State{word: word}
-  end
+  def new_game(word), do: %State{word: word}
 
 
   @doc """
@@ -198,9 +196,8 @@ Here's this module being exercised from an iex session:
   Return the length of the current word.
   """
   @spec word_length(state) :: integer
-  def word_length(%{ word: word }) do
-    String.length(word)
-  end
+  def word_length(%{ word: word }), do: String.length(word)
+ 
 
   @doc """
   `list = letters_used_so_far(game)`
@@ -211,9 +208,7 @@ Here's this module being exercised from an iex session:
   """
 
   @spec letters_used_so_far(state) :: [ binary ]
-  def letters_used_so_far(state) do
-    state.used_letters
-  end
+  def letters_used_so_far(state), do: state.used_letters
 
   @doc """
   `count = turns_left(game)`
@@ -224,9 +219,7 @@ Here's this module being exercised from an iex session:
   """
 
   @spec turns_left(state) :: integer
-  def turns_left(state) do
-    state.turns_left
-  end
+  def turns_left(state), do: state.turns_left
 
   @doc """
   `word = word_as_string(game, reveal \\ false)`
@@ -238,28 +231,21 @@ Here's this module being exercised from an iex session:
   """
 
   @spec word_as_string(state, boolean) :: binary
-  def word_as_string(state, reveal \\ false) do
-    cond do
-      reveal->String.codepoints(state.word)|>Enum.join(" ")|>to_string()
-      true->String.codepoints(state.word)|>str_replace(state)|>Enum.join(" ")|>to_string()
-    end
-  end
+  def word_as_string(state, reveal \\ false), do: w_as_s(String.codepoints(state.word), state.correct, reveal) 
 
   ###########################
   # end of public interface #
   ###########################
 
   # Your private functions go here
-  defp str_replace([a|rest], state) do
-    cond do
-      state.correct[a]->[a| str_replace(rest,state)]
-      true->["_"| str_replace(rest,state)]
-    end
-  end
+  defp w_as_s([c| rest], correct, false), do: str_replace([c|rest],correct, correct[c])|>Enum.join(" ")|>to_string()
+  defp w_as_s(word, _correct, true ),     do: word |>Enum.join(" ")|>to_string()
 
-  defp str_replace([], _state) do
-    []
-  end
+  defp str_replace([_a, b |rest], correct, nil),   do: ["_"| str_replace([b|rest],correct, correct[b])]
+  defp str_replace([a, b |rest], correct, true),  do: [a| str_replace([b|rest],correct, correct[b])]
+  defp str_replace([_a], _, nil),                  do: ["_"]
+  defp str_replace([a], _, true),                 do: [a]
+
 
   defp game_correct_status(state, guess) do
     cond do
@@ -272,8 +258,6 @@ Here's this module being exercised from an iex session:
     {%{turns_left: 0, word: w1, used_letters: used, correct: c}, :lost, nil}
   end
   
-  defp game_wrong_status(state, guess) do
-    {state, :bad_guess, guess}
-  end
+  defp game_wrong_status(state, guess), do: {state, :bad_guess, guess}
   
 end
